@@ -47,6 +47,11 @@ const uint16_t WateringThreshold = 400;
 const uint16_t WateringTime = 5000;
 const uint16_t MonitorDelay = 1000;
 
+// CO2, temperature and humidity
+uint16_t co2;
+float temp;
+float rh;
+
 // Frequency of sensor reading
 uint16_t sensor_delay = 5000;
 
@@ -71,16 +76,12 @@ void print_splash_screen(){
   delay(3000);
 }
 
-uint8_t get_co2_temp_rh(){
+void get_co2_temp_rh(){
   uint16_t error;
   char errorMessage[256];
 
   // Read Measurement
-  uint16_t co2;
-  float temp;
-  float hr;
-  
-  error = scd4x.readMeasurement(co2, temperature, humidity);
+  error = scd4x.readMeasurement(co2, temp, rh);
   if (error) {
     Serial.print("Error trying to execute readMeasurement(): ");
     errorToString(error, errorMessage, 256);
@@ -92,10 +93,10 @@ uint8_t get_co2_temp_rh(){
     Serial.print(co2);
     Serial.print("\t");
     Serial.print("Temperature:");
-    Serial.print(temperature);
+    Serial.print(temp);
     Serial.print("\t");
     Serial.print("Humidity:");
-    Serial.println(humidity);
+    Serial.println(rh);
   }
 }
 
@@ -250,14 +251,18 @@ void setup() {
 }
 
 void loop() {
-  uint8_t moistArray[4] = {0,0,0,0};
+  uint8_t moistArray[] = {0,0,0,0};
   for(uint8_t i = 0; i < moistArray[4]; i++){
     moistArray[i] = get_soil_moisture(moist_pins[i]);  // Soil moisture %
   }
+  uint8_t s1 = moistArray[0];
+  uint8_t s2 = moistArray[1];
+  uint8_t s3 = moistArray[2];
+  uint8_t s4 = moistArray[3];
 
   //uint8_t temp = get_temp();
   //uint8_t rh = get_rh();
-  uint8_t temp get_co2_temp_rh();
+  get_co2_temp_rh();
   uint8_t lux = get_lux();
   float uv = get_uv();
 
@@ -266,12 +271,11 @@ void loop() {
 
   // Check if need watering
   for(uint8_t i = 0; i < moistArray[4]; i++){
-    if(moistArray[i] < ){
+    if(moistArray[i] < WateringThreshold){
       water(moist_pins[i], watering_time);
     }
   }
 
   // Read sensors every 5s
-  delay(sensor_delay)
-  }
+  delay(sensor_delay);
 }
